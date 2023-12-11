@@ -13,6 +13,18 @@ public struct CachedTextTranslator: TextTranslator {
 	public func supports(from: String, to: String) -> Bool {
 		translator.supports(from: from, to: to)
 	}
+  
+  public func translate(text: String, from: String, to: String) throws -> String {
+    if from == to {
+      return text
+    }
+    if let result = try translateUsingCache(text: text, sourceLanguage: from, targetLanguage: to) {
+      return result
+    }
+    let targetText = try translator.translate(text: text, from: from, to: to)
+    try insertCache(sourceText: text, sourceLanguage: from, targetText: targetText, targetLanguage: to)
+    return targetText
+  }
 	
 	private func createDatabaseIfNotExists() throws {
 		if !FileManager.default.fileExists(atPath: cacheURL.path) {
@@ -48,14 +60,5 @@ public struct CachedTextTranslator: TextTranslator {
 		try createDatabaseIfNotExists()
 		let db = try Connection(cacheURL.path)
 		try db.run("INSERT INTO cache (sourceLanguage, targetLanguage, sourceText, targetText) VALUES (?, ?, ?, ?)", [sourceLanguage, targetLanguage, sourceText, targetText])
-	}
-	
-	public func translate(text: String, from: String, to: String) throws -> String {
-		if let result = try translateUsingCache(text: text, sourceLanguage: from, targetLanguage: to) {
-			return result
-		}
-		let targetText = try translator.translate(text: text, from: from, to: to)
-		try insertCache(sourceText: text, sourceLanguage: from, targetText: targetText, targetLanguage: to)
-		return targetText
 	}
 }

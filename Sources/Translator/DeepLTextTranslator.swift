@@ -56,6 +56,10 @@ public struct DeepLTextTranslator: TextTranslator {
 	}
 	
 	public func translate(text: String, from: String, to: String) throws -> String {
+    if from == to {
+      return text
+    }
+    
 		let url = URL(string: "https://api-free.deepl.com/v2/translate")!
 		var components = URLComponents()
 		components.queryItems = [

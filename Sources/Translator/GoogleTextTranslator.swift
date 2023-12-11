@@ -125,6 +125,10 @@ public struct GoogleTextTranslator: TextTranslator {
 	}
 	
 	public func translate(text: String, from: String, to: String) throws -> String {
+    if from == to {
+      return text
+    }
+    
 		let url = URL(string: "https://translation.googleapis.com/language/translate/v2")!
 		var components = URLComponents()
 		components.queryItems = [

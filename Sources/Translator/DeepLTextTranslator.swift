@@ -69,11 +69,12 @@ public struct DeepLTextTranslator: TextTranslator {
 		let url = URL(string: "https://api-free.deepl.com/v2/translate")!
 		var components = URLComponents()
     
+    let targetLang = convertTargetLanguageForDeepL(target: to).uppercased()
     var queryItems: [URLQueryItem] = [
       URLQueryItem(name: "auth_key", value: self.apiKey),
       URLQueryItem(name: "text", value: text),
       URLQueryItem(name: "source_lang", value: from.uppercased()),
-      URLQueryItem(name: "target_lang", value: convertTargetLanguageForDeepL(target: to).uppercased()),
+      URLQueryItem(name: "target_lang", value: targetLang),
     ]
     if let preserveFormatting {
       queryItems.append(URLQueryItem(name: "preserve_formatting", value: preserveFormatting.description))
@@ -81,8 +82,10 @@ public struct DeepLTextTranslator: TextTranslator {
     if let context {
       queryItems.append(URLQueryItem(name: "context", value: context))
     }
-    if let formality {
-      queryItems.append(URLQueryItem(name: "formality", value: formality))
+    if ["DE", "FR", "IT", "ES", "NL", "PL", "PT-BR", "PT-PT", "JA", "RU"].contains(targetLang) {
+      if let formality {
+        queryItems.append(URLQueryItem(name: "formality", value: formality))
+      }
     }
     
 		components.queryItems = queryItems

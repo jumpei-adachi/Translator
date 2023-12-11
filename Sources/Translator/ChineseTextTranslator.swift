@@ -10,8 +10,8 @@ public struct ChineseTextTranslator: TextTranslator {
 		translator.supports(from: from, to: "zh") && (["zh-Hans", "zh-Hant", "zh-HK"].contains(to))
 	}
 	
-	public func translate(text: String, from: String, to: String) throws -> String {
-		let translated = try translator.translate(text: text, from: from, to: "zh")
+  public func translate(text: String, from: String, to: String, hash: String?) throws -> String {
+    let translated = try translator.translate(text: text, from: from, to: "zh", hash: hash)
 		switch to {
 		case "zh-Hans":
 			return translated

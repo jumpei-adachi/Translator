@@ -124,7 +124,7 @@ public struct GoogleTextTranslator: TextTranslator {
 		return supportedLanguages.contains(from) && supportedLanguages.contains(to)
 	}
 	
-	public func translate(text: String, from: String, to: String) throws -> String {
+  public func translate(text: String, from: String, to: String, hash: String?) throws -> String {
     if from == to {
       return text
     }

@@ -14,15 +14,15 @@ public struct CachedTextTranslator: TextTranslator {
 		translator.supports(from: from, to: to)
 	}
   
-  public func translate(text: String, from: String, to: String) throws -> String {
+  public func translate(text: String, from: String, to: String, hash: String?) throws -> String {
     if from == to {
       return text
     }
-    if let result = try translateUsingCache(text: text, sourceLanguage: from, targetLanguage: to) {
+    if let result = try translateUsingCache(text: text, hash: hash, sourceLanguage: from, targetLanguage: to) {
       return result
     }
-    let targetText = try translator.translate(text: text, from: from, to: to)
-    try insertCache(sourceText: text, sourceLanguage: from, targetText: targetText, targetLanguage: to)
+    let targetText = try translator.translate(text: text, from: from, to: to, hash: hash)
+    try insertCache(hash: hash, sourceText: text, sourceLanguage: from, targetText: targetText, targetLanguage: to)
     return targetText
   }
 	
@@ -30,25 +30,26 @@ public struct CachedTextTranslator: TextTranslator {
 		if !FileManager.default.fileExists(atPath: cacheURL.path) {
 			let db = try Connection(cacheURL.path)
 			try db.run(
-				"""
-				CREATE TABLE cache(
-					id INTEGER PRIMARY KEY AUTOINCREMENT,
-					sourceLanguage TEXT NOT NULL,
-					targetLanguage TEXT NOT NULL,
-					sourceText TEXT NOT NULL,
-					targetText TEXT NOT NULL
-				)
-				"""
+"""
+CREATE TABLE cache(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+hash TEXT,
+sourceLanguage TEXT NOT NULL,
+targetLanguage TEXT NOT NULL,
+sourceText TEXT NOT NULL,
+targetText TEXT NOT NULL
+)
+"""
 			)
 		}
 	}
 	
-	private func translateUsingCache(text: String, sourceLanguage: String, targetLanguage: String) throws -> String? {
+  private func translateUsingCache(text: String, hash: String?, sourceLanguage: String, targetLanguage: String) throws -> String? {
 		try createDatabaseIfNotExists()
 		let db = try Connection(cacheURL.path)
 		if let result = (try db.prepare(
-			"SELECT targetText FROM cache WHERE sourceLanguage=? AND targetLanguage=? AND sourceText=?",
-			[sourceLanguage, targetLanguage, text]
+			"SELECT targetText FROM cache WHERE sourceLanguage=? AND targetLanguage=? AND sourceText=? AND hash=?",
+			[sourceLanguage, targetLanguage, text, hash]
 		).scalar()) {
 			return result as? String
 		} else {
@@ -56,9 +57,9 @@ public struct CachedTextTranslator: TextTranslator {
 		}
 	}
 	
-	private func insertCache(sourceText: String, sourceLanguage: String, targetText: String, targetLanguage: String) throws {
+  private func insertCache(hash: String?, sourceText: String, sourceLanguage: String, targetText: String, targetLanguage: String) throws {
 		try createDatabaseIfNotExists()
 		let db = try Connection(cacheURL.path)
-		try db.run("INSERT INTO cache (sourceLanguage, targetLanguage, sourceText, targetText) VALUES (?, ?, ?, ?)", [sourceLanguage, targetLanguage, sourceText, targetText])
+		try db.run("INSERT INTO cache (hash, sourceLanguage, targetLanguage, sourceText, targetText) VALUES (?, ?, ?, ?, ?)", [hash, sourceLanguage, targetLanguage, sourceText, targetText])
 	}
 }

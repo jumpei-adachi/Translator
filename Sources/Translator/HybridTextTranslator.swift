@@ -11,10 +11,10 @@ public struct HybridTextTranslator: TextTranslator {
 		}
 	}
 	
-	public func translate(text: String, from: String, to: String) throws -> String {
+  public func translate(text: String, from: String, to: String, hash: String?) throws -> String {
 		for translator in translators {
 			if translator.supports(from: from, to: to) {
-				let target = try translator.translate(text: text, from: from, to: to)
+        let target = try translator.translate(text: text, from: from, to: to, hash: hash)
 				return target
 			}
 		}

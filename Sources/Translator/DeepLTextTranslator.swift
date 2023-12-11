@@ -3,7 +3,13 @@ import Dispatch
 
 public struct DeepLTextTranslator: TextTranslator {
 	private let apiKey: String
-	
+  
+  public var preserveFormatting: Bool?
+  
+  public var context: String?
+  
+  public var formality: String?
+  
 	public init(apiKey: String) {
 		self.apiKey = apiKey
 	}
@@ -62,12 +68,24 @@ public struct DeepLTextTranslator: TextTranslator {
     
 		let url = URL(string: "https://api-free.deepl.com/v2/translate")!
 		var components = URLComponents()
-		components.queryItems = [
-			URLQueryItem(name: "auth_key", value: self.apiKey),
-			URLQueryItem(name: "text", value: text),
-			URLQueryItem(name: "source_lang", value: from.uppercased()),
-			URLQueryItem(name: "target_lang", value: convertTargetLanguageForDeepL(target: to).uppercased()),
-		]
+    
+    var queryItems: [URLQueryItem] = [
+      URLQueryItem(name: "auth_key", value: self.apiKey),
+      URLQueryItem(name: "text", value: text),
+      URLQueryItem(name: "source_lang", value: from.uppercased()),
+      URLQueryItem(name: "target_lang", value: convertTargetLanguageForDeepL(target: to).uppercased()),
+    ]
+    if let preserveFormatting {
+      queryItems.append(URLQueryItem(name: "preserve_formatting", value: preserveFormatting.description))
+    }
+    if let context {
+      queryItems.append(URLQueryItem(name: "context", value: context))
+    }
+    if let formality {
+      queryItems.append(URLQueryItem(name: "formality", value: formality))
+    }
+    
+		components.queryItems = queryItems
 		var request = URLRequest(url: url)
 		request.httpMethod = "POST"
 		request.httpBody = components.percentEncodedQuery?.data(using: .utf8)

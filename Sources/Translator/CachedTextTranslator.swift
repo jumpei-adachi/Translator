@@ -47,10 +47,19 @@ targetText TEXT NOT NULL
   private func translateUsingCache(text: String, hash: String?, sourceLanguage: String, targetLanguage: String) throws -> String? {
 		try createDatabaseIfNotExists()
 		let db = try Connection(cacheURL.path)
-		if let result = (try db.prepare(
-			"SELECT targetText FROM cache WHERE sourceLanguage=? AND targetLanguage=? AND sourceText=? AND hash=?",
-			[sourceLanguage, targetLanguage, text, hash]
-		).scalar()) {
+    let prepare = if let hash {
+      try db.prepare(
+        "SELECT targetText FROM cache WHERE sourceLanguage=? AND targetLanguage=? AND sourceText=? AND hash=?",
+        [sourceLanguage, targetLanguage, text, hash]
+      )
+    } else {
+      try db.prepare(
+        "SELECT targetText FROM cache WHERE sourceLanguage=? AND targetLanguage=? AND sourceText=? AND hash IS NULL",
+        [sourceLanguage, targetLanguage, text]
+      )
+    }
+    
+		if let result = try prepare.scalar() {
 			return result as? String
 		} else {
 			return nil
